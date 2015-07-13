@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     renderWidget = new Render2DWidget(this);
     setCentralWidget(renderWidget);
-    connect(renderWidget, SIGNAL(cameraDragged(const QPoint&)), this, SLOT(updateCameraPositionMessage(const QPoint&)));
+    //connect(renderWidget, SIGNAL(cameraDragged(const QPoint&)), this, SLOT(updateCameraPositionMessage(const QPoint&)));
 }
 
 MainWindow::~MainWindow()

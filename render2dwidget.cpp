@@ -2,10 +2,10 @@
 
 #include <QPainter>
 #include <QDebug>
+#include <QDateTime>
 
 Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
-    //setFixedSize(300, 300);
     backgroundBrush = QBrush(Qt::white);
     linePen = QPen(Qt::red);
 
@@ -13,8 +13,9 @@ Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
     emit cameraDragged(cameraCenter);
 
     rectangles = new QVector<QRect>();
-    rectangles->append(QRect(10, 10, 20, 30));
-    rectangles->append(QRect(50, 50, 40, 40));
+    rectangles->append(QRect(10, 10, 5, 5));
+
+    lastPaintAt = 0;
 }
 
 Render2DWidget::~Render2DWidget()
@@ -24,21 +25,24 @@ Render2DWidget::~Render2DWidget()
 
 void Render2DWidget::paintEvent(QPaintEvent *e)
 {
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    qint64 timeBetweenPaints = now - lastPaintAt;
+    lastPaintAt = now;
+    qDebug() << timeBetweenPaints;
+
     QPainter painter;
     painter.begin(this);
+    centerToCamera(painter);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(e->rect(), backgroundBrush);
+    painter.fillRect(painter.window(), backgroundBrush);
     painter.setBrush(Qt::NoBrush);
     painter.setPen(linePen);
-
     drawRectangles(painter);
-
     painter.end();
 }
 
 void Render2DWidget::mousePressEvent(QMouseEvent *e)
 {
-    qDebug() << "mousePressEvent";
     if(e->type() == QMouseEvent::MouseButtonPress) {
         isMousePressed = true;
         lastPressedPoint.setX(e->x() - cameraCenter.x());
@@ -50,7 +54,6 @@ void Render2DWidget::mousePressEvent(QMouseEvent *e)
 
 void Render2DWidget::mouseMoveEvent(QMouseEvent *e)
 {
-    qDebug() << "mouseMoveEvent";
     int xOffset = e->x() - lastPressedPoint.x();
     int yOffset = e->y() - lastPressedPoint.y();
     cameraCenter.setX(xOffset);
@@ -59,10 +62,8 @@ void Render2DWidget::mouseMoveEvent(QMouseEvent *e)
     update();
 }
 
-
 void Render2DWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-    qDebug() << "mouseReleaseEvent";
     if(e->type() == QMouseEvent::MouseButtonRelease) {
         isMousePressed = false;
         updateCursor();
@@ -75,12 +76,17 @@ void Render2DWidget::updateCursor()
     setCursor(isMousePressed ? Qt::ClosedHandCursor : Qt::ArrowCursor);
 }
 
+void Render2DWidget::centerToCamera(QPainter &painter)
+{
+    int w = width();
+    int h = height();
+    painter.setWindow(-w / 2 - cameraCenter.x(), -h / 2 - cameraCenter.y(), w, h);
+}
+
 void Render2DWidget::drawRectangles(QPainter &painter)
 {
     for(int i = 0; i < rectangles->size(); i++) {
         QRect rectangle = rectangles->at(i);
-        rectangle.moveLeft(rectangle.left() + cameraCenter.x());
-        rectangle.moveTop(rectangle.top() + cameraCenter.y());
         painter.drawRect(rectangle);
     }
 }

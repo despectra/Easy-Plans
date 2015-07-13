@@ -6,8 +6,10 @@
 #include <QMouseEvent>
 #include <QBrush>
 #include <QPen>
+#include <QTimer>
 
 #include <QVector>
+#include <QSet>
 
 class Render2DWidget : public QOpenGLWidget
 {
@@ -24,15 +26,15 @@ protected:
     void mouseReleaseEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
 private:
     void updateCursor();
+    void centerToCamera(QPainter& painter);
     void drawRectangles(QPainter& painter);
+
+    qint64 lastPaintAt;
 
     QBrush backgroundBrush;
     QPen linePen;
-
-
-    boolean isMousePressed;
+    bool isMousePressed;
     QPoint lastPressedPoint;
-
     QPoint cameraCenter;
     QVector<QRect>* rectangles;
 };
