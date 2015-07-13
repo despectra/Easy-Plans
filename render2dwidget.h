@@ -11,7 +11,13 @@
 #include <QVector>
 #include <QSet>
 
-class Render2DWidget : public QOpenGLWidget
+#define PARENT_WIDGET_CLASS QOpenGLWidget
+
+#ifdef GPU_DRIVERS_ARE_FUCKED==1
+#define PARENT_WIDGET_CLASS QWidget
+#endif
+
+class Render2DWidget : public PARENT_WIDGET_CLASS
 {
     Q_OBJECT
 public:
@@ -30,6 +36,9 @@ private:
     void drawRectangles(QPainter& painter);
     void drawBackground(QPainter& painter);
     void drawGrid(QPainter& painter);
+    void drawVerticalGrid(QPainter& painter);
+    void drawHorizontalGrid(QPainter& painter);
+    void drawAxes(QPainter& painter);
 
     qint64 lastPaintAt;
 
@@ -40,6 +49,7 @@ private:
     bool isMousePressed;
     QPoint lastPressedPoint;
     QPoint cameraCenter;
+    QRect window;
     int gridSize;
     QVector<QRect>* rectangles;
 };

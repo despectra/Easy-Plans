@@ -3,12 +3,14 @@
 #include <QPainter>
 #include <QDebug>
 #include <QDateTime>
+#include <QGraphicsView>
 
-Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
+Render2DWidget::Render2DWidget(QWidget *parent) : PARENT_WIDGET_CLASS(parent)
 {
     backgroundBrush = QBrush(Qt::white);
     linePen = QPen(Qt::red);
-    gridPen = QPen(QColor::fromRgbF(0.9, 0.9, 0.9));
+    gridPen = QPen(QColor::fromRgbF(0.6, 0.6, 0.8));
+    gridPen.setStyle(Qt::DotLine);
 
     cameraCenter = QPoint(0, 0);
     emit cameraDragged(cameraCenter);
@@ -36,7 +38,6 @@ void Render2DWidget::paintEvent(QPaintEvent *e)
     QPainter painter;
     painter.begin(this);
     centerToCamera(painter);
-    painter.setRenderHint(QPainter::Antialiasing);
     drawBackground(painter);
     drawGrid(painter);
     drawRectangles(painter);
@@ -82,7 +83,11 @@ void Render2DWidget::centerToCamera(QPainter &painter)
 {
     int w = width();
     int h = height();
-    painter.setWindow(-w / 2 - cameraCenter.x(), -h / 2 - cameraCenter.y(), w, h);
+    window.setLeft(-w / 2 - cameraCenter.x());
+    window.setTop(-h / 2 - cameraCenter.y());
+    window.setWidth(w);
+    window.setHeight(h);
+    painter.setWindow(window);
 }
 
 void Render2DWidget::drawRectangles(QPainter &painter)
@@ -103,13 +108,34 @@ void Render2DWidget::drawGrid(QPainter &painter)
 {
     painter.setBrush(Qt::NoBrush);
     painter.setPen(gridPen);
-    QRect window = painter.window();
+    drawVerticalGrid(painter);
+    drawHorizontalGrid(painter);
+    drawAxes(painter);
+}
+
+void Render2DWidget::drawVerticalGrid(QPainter &painter)
+{
     int offsetX = window.left() % gridSize;
     for(int i = window.left() - offsetX; i < window.right() - offsetX; i += gridSize) {
         painter.drawLine(i, window.top(), i, window.bottom());
     }
+}
+
+void Render2DWidget::drawHorizontalGrid(QPainter &painter)
+{
     int offsetY = window.top() % gridSize;
     for(int i = window.top() - offsetY; i < window.bottom() - offsetY; i += gridSize) {
         painter.drawLine(window.left(), i, window.right(), i);
+    }
+}
+
+void Render2DWidget::drawAxes(QPainter &painter)
+{
+    painter.setPen(linePen);
+    if(window.left() < 0 && 0 < window.right()) {
+        painter.drawLine(0, window.top(), 0, window.bottom());
+    }
+    if(window.top() < 0 && 0 < window.bottom()) {
+        painter.drawLine(window.left(), 0, window.right(), 0);
     }
 }
