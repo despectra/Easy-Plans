@@ -28,14 +28,19 @@ private:
     void updateCursor();
     void centerToCamera(QPainter& painter);
     void drawRectangles(QPainter& painter);
+    void drawBackground(QPainter& painter);
+    void drawGrid(QPainter& painter);
 
     qint64 lastPaintAt;
 
     QBrush backgroundBrush;
+    QPen gridPen;
     QPen linePen;
+
     bool isMousePressed;
     QPoint lastPressedPoint;
     QPoint cameraCenter;
+    int gridSize;
     QVector<QRect>* rectangles;
 };
 

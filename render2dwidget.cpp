@@ -8,12 +8,15 @@ Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
     backgroundBrush = QBrush(Qt::white);
     linePen = QPen(Qt::red);
+    gridPen = QPen(QColor::fromRgbF(0.9, 0.9, 0.9));
 
     cameraCenter = QPoint(0, 0);
     emit cameraDragged(cameraCenter);
 
     rectangles = new QVector<QRect>();
     rectangles->append(QRect(10, 10, 5, 5));
+
+    gridSize = 50;
 
     lastPaintAt = 0;
 }
@@ -34,9 +37,8 @@ void Render2DWidget::paintEvent(QPaintEvent *e)
     painter.begin(this);
     centerToCamera(painter);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(painter.window(), backgroundBrush);
-    painter.setBrush(Qt::NoBrush);
-    painter.setPen(linePen);
+    drawBackground(painter);
+    drawGrid(painter);
     drawRectangles(painter);
     painter.end();
 }
@@ -85,8 +87,29 @@ void Render2DWidget::centerToCamera(QPainter &painter)
 
 void Render2DWidget::drawRectangles(QPainter &painter)
 {
+    painter.setPen(linePen);
     for(int i = 0; i < rectangles->size(); i++) {
         QRect rectangle = rectangles->at(i);
         painter.drawRect(rectangle);
+    }
+}
+
+void Render2DWidget::drawBackground(QPainter &painter)
+{
+    painter.fillRect(painter.window(), backgroundBrush);
+}
+
+void Render2DWidget::drawGrid(QPainter &painter)
+{
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(gridPen);
+    QRect window = painter.window();
+    int offsetX = window.left() % gridSize;
+    for(int i = window.left() - offsetX; i < window.right() - offsetX; i += gridSize) {
+        painter.drawLine(i, window.top(), i, window.bottom());
+    }
+    int offsetY = window.top() % gridSize;
+    for(int i = window.top() - offsetY; i < window.bottom() - offsetY; i += gridSize) {
+        painter.drawLine(window.left(), i, window.right(), i);
     }
 }
