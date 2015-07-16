@@ -5,7 +5,7 @@
 #include <QDateTime>
 #include <QGraphicsView>
 
-Render2DWidget::Render2DWidget(QWidget *parent) : PARENT_WIDGET_CLASS(parent)
+Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
     backgroundBrush = QBrush(Qt::white);
     linePen = QPen(Qt::red);

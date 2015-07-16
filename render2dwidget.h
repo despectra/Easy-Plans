@@ -11,13 +11,7 @@
 #include <QVector>
 #include <QSet>
 
-#define PARENT_WIDGET_CLASS QOpenGLWidget
-
-#ifdef GPU_DRIVERS_ARE_FUCKED==1
-#define PARENT_WIDGET_CLASS QWidget
-#endif
-
-class Render2DWidget : public PARENT_WIDGET_CLASS
+class Render2DWidget : public QOpenGLWidget
 {
     Q_OBJECT
 public:

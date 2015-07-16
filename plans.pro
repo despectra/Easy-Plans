@@ -11,8 +11,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = plans
 TEMPLATE = app
 
-DEFINES += GPU_DRIVERS_ARE_FUCKED='$(echo $GPU_DRIVERS_ARE_FUCKED)'
-
 SOURCES += main.cpp\
         mainwindow.cpp \
     render2dwidget.cpp
