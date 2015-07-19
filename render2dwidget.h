@@ -33,6 +33,7 @@ public slots:
     void setDraggingMode();
     void setSelectionMode();
     void setDrawingMode();
+    void setSnapToGrid(bool enabled);
 signals:
     void cameraDragged(const QPoint& position);
 protected:
@@ -75,6 +76,7 @@ private:
     Mode currentMode;
     QRect* currentDrawingShape;
     int wallSize;
+    bool snapToGrid;
 };
 
 #endif // RENDERWIDGET_H

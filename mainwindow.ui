@@ -32,8 +32,9 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionSelectionMode"/>
-   <addaction name="separator"/>
    <addaction name="actionWallPaintMode"/>
+   <addaction name="separator"/>
+   <addaction name="actionSnapToGridMode"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionSelectionMode">
@@ -58,6 +59,18 @@
    </property>
    <property name="text">
     <string>Wall paint</string>
+   </property>
+  </action>
+  <action name="actionSnapToGridMode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/snap_to_grid.png</normaloff>:/icons/snap_to_grid.png</iconset>
+   </property>
+   <property name="text">
+    <string>Snap to grid</string>
    </property>
   </action>
  </widget>

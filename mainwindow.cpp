@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setCentralWidget(renderWidget);
     connect(renderWidget, SIGNAL(cameraDragged(const QPoint&)), this, SLOT(updateCameraPositionMessage(const QPoint&)));
     connect(this->ui->actionWallPaintMode, SIGNAL(toggled(bool)), this, SLOT(wallPaintModeToggled(bool)));
+    connect(this->ui->actionSnapToGridMode, SIGNAL(toggled(bool)), renderWidget, SLOT(setSnapToGrid(bool)));
 }
 
 MainWindow::~MainWindow()

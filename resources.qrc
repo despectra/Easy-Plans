@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>icons/cursor.png</file>
         <file>icons/wall.png</file>
+        <file>icons/snap_to_grid.png</file>
     </qresource>
 </RCC>

@@ -24,6 +24,7 @@ Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
     rectangles = new QVector<QRect>();
     gridSize = 50;
     wallSize = 10;
+    snapToGrid = false;
     currentDrawingShape = NULL;
 }
 
@@ -48,6 +49,11 @@ void Render2DWidget::setSelectionMode()
 void Render2DWidget::setDrawingMode()
 {
     currentMode = Drawing;
+}
+
+void Render2DWidget::setSnapToGrid(bool enabled)
+{
+    snapToGrid = enabled;
 }
 
 void Render2DWidget::paintEvent(QPaintEvent *e)
@@ -148,22 +154,30 @@ void Render2DWidget::moveCamera(QPoint offset)
 
 void Render2DWidget::resizeDrawingShape(Render2DWidget::MovementDirection direction, QPoint offset)
 {
+    QPoint from, to;
+    if(snapToGrid) {
+        from = (lastPressedPoint / gridSize) * gridSize;
+        to = (offset / gridSize) * gridSize;
+    } else {
+        from = lastPressedPoint;
+        to = offset;
+    }
     switch(direction) {
     case TopRight:
-        currentDrawingShape->setTopRight(offset);
-        currentDrawingShape->setBottomLeft(lastPressedPoint);
+        currentDrawingShape->setBottomLeft(from);
+        currentDrawingShape->setTopRight(to);
         break;
     case TopLeft:
-        currentDrawingShape->setTopLeft(offset);
-        currentDrawingShape->setBottomRight(lastPressedPoint);
+        currentDrawingShape->setBottomRight(from);
+        currentDrawingShape->setTopLeft(to);
         break;
     case BottomLeft:
-        currentDrawingShape->setBottomLeft(offset);
-        currentDrawingShape->setTopRight(lastPressedPoint);
+        currentDrawingShape->setTopRight(from);
+        currentDrawingShape->setBottomLeft(to);
         break;
     case BottomRight:
-        currentDrawingShape->setBottomRight(offset);
-        currentDrawingShape->setTopLeft(lastPressedPoint);
+        currentDrawingShape->setTopLeft(from);
+        currentDrawingShape->setBottomRight(to);
         break;
     }
 }
