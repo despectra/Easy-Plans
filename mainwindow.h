@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QEvent>
 
 #include "render2dwidget.h"
 
@@ -14,8 +15,13 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+
+    QString CAMERA_POSITION_STRING = QString("Camera position: X = %1, Y = %2");
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+protected:
+    void changeEvent(QEvent* event);
 
 private:
     Ui::MainWindow *ui;
@@ -23,6 +29,7 @@ private:
 
 private slots:
     void updateCameraPositionMessage(const QPoint &position);
+    void wallPaintModeToggled(bool checked);
 };
 
 #endif // MAINWINDOW_H

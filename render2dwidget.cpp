@@ -11,45 +11,71 @@ Render2DWidget::Render2DWidget(QWidget *parent) : QOpenGLWidget(parent)
     linePen = QPen(Qt::red);
     gridPen = QPen(QColor::fromRgbF(0.6, 0.6, 0.8));
     gridPen.setStyle(Qt::DotLine);
+    objectPen = QPen(Qt::black);
 
     cameraCenter = QPoint(0, 0);
+    prevCameraCenter = cameraCenter;
     emit cameraDragged(cameraCenter);
+    setDraggingMode();
+    prevWindow = QRect(0, 0, 0, 0);
+    updateWindow();
+    isMousePressed = false;
 
     rectangles = new QVector<QRect>();
-    rectangles->append(QRect(10, 10, 5, 5));
-
     gridSize = 50;
-
-    lastPaintAt = 0;
+    wallSize = 10;
+    currentDrawingShape = NULL;
 }
 
 Render2DWidget::~Render2DWidget()
 {
     delete rectangles;
+    if(currentDrawingShape != NULL) {
+        delete currentDrawingShape;
+    }
+}
+
+void Render2DWidget::setDraggingMode()
+{
+    currentMode = Dragging;
+}
+
+void Render2DWidget::setSelectionMode()
+{
+    currentMode = Selection;
+}
+
+void Render2DWidget::setDrawingMode()
+{
+    currentMode = Drawing;
 }
 
 void Render2DWidget::paintEvent(QPaintEvent *e)
 {
-    qint64 now = QDateTime::currentMSecsSinceEpoch();
-    qint64 timeBetweenPaints = now - lastPaintAt;
-    lastPaintAt = now;
-    qDebug() << timeBetweenPaints;
-
     QPainter painter;
     painter.begin(this);
     centerToCamera(painter);
     drawBackground(painter);
     drawGrid(painter);
     drawRectangles(painter);
+    drawCurrentDrawingShape(painter);
     painter.end();
 }
 
 void Render2DWidget::mousePressEvent(QMouseEvent *e)
 {
     if(e->type() == QMouseEvent::MouseButtonPress) {
+        QPoint cursor = mapCursorPositionToCanvas(e);
+        lastPressedPoint = cursor;
         isMousePressed = true;
-        lastPressedPoint.setX(e->x() - cameraCenter.x());
-        lastPressedPoint.setY(e->y() - cameraCenter.y());
+        if(currentMode == Drawing) {
+            if(currentDrawingShape == NULL) {
+                currentDrawingShape = new QRect();
+            }
+            currentDrawingShape->setTopLeft(lastPressedPoint);
+            currentDrawingShape->setWidth(0);
+            currentDrawingShape->setHeight(0);
+        }
         updateCursor();
         update();
     }
@@ -57,11 +83,19 @@ void Render2DWidget::mousePressEvent(QMouseEvent *e)
 
 void Render2DWidget::mouseMoveEvent(QMouseEvent *e)
 {
-    int xOffset = e->x() - lastPressedPoint.x();
-    int yOffset = e->y() - lastPressedPoint.y();
-    cameraCenter.setX(xOffset);
-    cameraCenter.setY(yOffset);
-    emit cameraDragged(cameraCenter);
+    QPoint cursor = mapCursorPositionToCanvas(e);
+    int xOffset = cursor.x() - lastPressedPoint.x();
+    int yOffset = cursor.y() - lastPressedPoint.y();
+    QPoint offset(xOffset, yOffset);
+    switch(currentMode) {
+    case Dragging:
+        moveCamera(offset);
+        break;
+    case Drawing:
+        MovementDirection direction = getCursorMovementDirection(offset);
+        resizeDrawingShape(direction, cursor);
+        break;
+    }
     update();
 }
 
@@ -69,17 +103,89 @@ void Render2DWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     if(e->type() == QMouseEvent::MouseButtonRelease) {
         isMousePressed = false;
+        prevWindow = window;
+        prevCameraCenter = cameraCenter;
         updateCursor();
         update();
     }
 }
 
-void Render2DWidget::updateCursor()
+QPoint Render2DWidget::mapCursorPositionToCanvas(QMouseEvent *event)
 {
-    setCursor(isMousePressed ? Qt::ClosedHandCursor : Qt::ArrowCursor);
+    int xNew = event->x() + prevWindow.left();
+    int yNew = event->y() + prevWindow.top();
+    QPoint result(xNew, yNew);
+    return result;
 }
 
-void Render2DWidget::centerToCamera(QPainter &painter)
+Render2DWidget::MovementDirection Render2DWidget::getCursorMovementDirection(QPoint offset)
+{
+    bool signX = offset.x() > 0;
+    bool signY = offset.y() > 0;
+    if(signX && signY) {
+        return BottomRight;
+    }
+    if(!signX && signY) {
+        return BottomLeft;
+    }
+    if(!signX && !signY) {
+        return TopLeft;
+    }
+    if(signX && !signY) {
+        return TopRight;
+    }
+}
+
+bool Render2DWidget::isCameraDragging()
+{
+    return currentMode == Dragging && isMousePressed;
+}
+
+void Render2DWidget::moveCamera(QPoint offset)
+{
+    cameraCenter = prevCameraCenter + offset;
+}
+
+void Render2DWidget::resizeDrawingShape(Render2DWidget::MovementDirection direction, QPoint offset)
+{
+    switch(direction) {
+    case TopRight:
+        currentDrawingShape->setTopRight(offset);
+        break;
+    case TopLeft:
+        currentDrawingShape->setTopLeft(offset);
+        break;
+    case BottomLeft:
+        currentDrawingShape->setBottomLeft(offset);
+        break;
+    case BottomRight:
+        currentDrawingShape->setBottomRight(offset);
+        break;
+    }
+}
+
+void Render2DWidget::updateCursor()
+{
+    QCursor newCursor;
+    if(isMousePressed) {
+        switch(currentMode) {
+        case Dragging:
+            newCursor = Qt::ClosedHandCursor;
+            break;
+        case Selection:
+            newCursor = Qt::ArrowCursor;
+            break;
+        case Drawing:
+            newCursor = Qt::CrossCursor;
+            break;
+        }
+    } else {
+        newCursor = Qt::ArrowCursor;
+    }
+    setCursor(newCursor);
+}
+
+void Render2DWidget::updateWindow()
 {
     int w = width();
     int h = height();
@@ -87,6 +193,14 @@ void Render2DWidget::centerToCamera(QPainter &painter)
     window.setTop(-h / 2 - cameraCenter.y());
     window.setWidth(w);
     window.setHeight(h);
+}
+
+void Render2DWidget::centerToCamera(QPainter &painter)
+{
+    updateWindow();
+    if(prevWindow.size().isNull() || !isCameraDragging()) {
+        prevWindow = window;
+    }
     painter.setWindow(window);
 }
 
@@ -96,6 +210,22 @@ void Render2DWidget::drawRectangles(QPainter &painter)
     for(int i = 0; i < rectangles->size(); i++) {
         QRect rectangle = rectangles->at(i);
         painter.drawRect(rectangle);
+    }
+}
+
+void Render2DWidget::drawCurrentDrawingShape(QPainter &painter)
+{
+    if(currentDrawingShape == NULL || currentDrawingShape->size().isEmpty()) {
+        return;
+    }
+    int halfWallSize = wallSize / 2;
+    painter.setPen(objectPen);
+    QMargins wallMargin(halfWallSize, halfWallSize, halfWallSize, halfWallSize);
+    QRect outerRect = currentDrawingShape->marginsAdded(wallMargin);
+    painter.drawRect(outerRect);
+    if(currentDrawingShape->width() > wallSize && currentDrawingShape->height() > wallSize) {
+        QRect innerRect = currentDrawingShape->marginsRemoved(wallMargin);
+        painter.drawRect(innerRect);
     }
 }
 

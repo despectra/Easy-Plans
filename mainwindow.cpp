@@ -8,7 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     renderWidget = new Render2DWidget(this);
     setCentralWidget(renderWidget);
-    //connect(renderWidget, SIGNAL(cameraDragged(const QPoint&)), this, SLOT(updateCameraPositionMessage(const QPoint&)));
+    connect(renderWidget, SIGNAL(cameraDragged(const QPoint&)), this, SLOT(updateCameraPositionMessage(const QPoint&)));
+    connect(this->ui->actionWallPaintMode, SIGNAL(toggled(bool)), this, SLOT(wallPaintModeToggled(bool)));
 }
 
 MainWindow::~MainWindow()
@@ -16,8 +17,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::changeEvent(QEvent *event)
+{
+    if(event->type() == QEvent::WindowStateChange) {
+        renderWidget->update();
+    }
+}
+
 void MainWindow::updateCameraPositionMessage(const QPoint& position)
 {
-    this->statusBar()->showMessage(QString("Camera position: X = %1, Y = %2")
-                                        .arg(QString::number(position.x()), QString::number(position.y())));
+
+}
+
+void MainWindow::wallPaintModeToggled(bool checked)
+{
+    if(checked) {
+        renderWidget->setDrawingMode();
+    } else {
+        renderWidget->setDraggingMode();
+    }
 }
