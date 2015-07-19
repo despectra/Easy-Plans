@@ -151,15 +151,19 @@ void Render2DWidget::resizeDrawingShape(Render2DWidget::MovementDirection direct
     switch(direction) {
     case TopRight:
         currentDrawingShape->setTopRight(offset);
+        currentDrawingShape->setBottomLeft(lastPressedPoint);
         break;
     case TopLeft:
         currentDrawingShape->setTopLeft(offset);
+        currentDrawingShape->setBottomRight(lastPressedPoint);
         break;
     case BottomLeft:
         currentDrawingShape->setBottomLeft(offset);
+        currentDrawingShape->setTopRight(lastPressedPoint);
         break;
     case BottomRight:
         currentDrawingShape->setBottomRight(offset);
+        currentDrawingShape->setTopLeft(lastPressedPoint);
         break;
     }
 }
